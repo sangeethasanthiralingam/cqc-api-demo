@@ -238,6 +238,33 @@ use GuzzleHttp\Client;
 //             return response()->json(['error' => $e->getMessage()], 500);
 //         }
 //     }
+
+// public function getPostalCode($locationId)
+// {
+//     $client = new Client();
+
+//     try {
+//         // Construct the URL with the location ID
+//         $url = 'https://anypoint.mulesoft.com/mocking/api/v1/sources/exchange/assets/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/1.0.49/m/locations/' . $locationId;
+
+//         $response = $client->get($url, [
+//             'headers' => [
+//                 'Accept' => 'application/json',
+//             ],
+//         ]);
+
+//         $data = json_decode($response->getBody(), true);
+
+//         // Check if postal code exists in the data
+//         if (isset($data['postalCode'])) {
+//             return response()->json(['postalCode' => $data['postalCode']]);
+//         } else {
+//             return response()->json(['error' => 'Postal code not found for the specified location.'], 404);
+//         }
+//     } catch (\Exception $e) {
+//         return response()->json(['error' => $e->getMessage()], 500);
+//     }
+// }
 // }
 
 
@@ -329,5 +356,140 @@ class CqcApiController extends Controller
     {
         $url = self::BASE_URL . 'reports/' . $reportId;
         return response()->json($this->makeRequest($url));
+    }
+
+    public function getPostalCode($locationId)
+    {
+        $client = new Client();
+
+        try {
+            // Construct the URL with the location ID
+            $url = self::BASE_URL . 'locations/' . $locationId;
+
+            $response = $client->get($url, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            // Check if postal code exists in the data
+            if (isset($data['postalCode'])) {
+                return response()->json(['postalCode' => $data['postalCode']]);
+            } else {
+                return response()->json(['error' => 'Postal code not found for the specified location.'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+
+    public function getServiceTypes($locationId)
+    {
+        $client = new Client();
+
+        try {
+            // Construct the URL with the location ID
+            $url = 'https://anypoint.mulesoft.com/mocking/api/v1/sources/exchange/assets/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/1.0.49/m/locations/' . $locationId;
+
+            $response = $client->get($url, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            $data = json_decode($response->getBody(), true);
+
+            // Check if location exists and has service types
+            if (isset($data['gacServiceTypes']) && is_array($data['gacServiceTypes'])) {
+                return response()->json($data['gacServiceTypes']);
+            } else {
+                return response()->json(['error' => 'Service types not found for the location.'], 404);
+            }
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getRegion($providerId)
+    {
+        // Initialize Guzzle client
+        $client = new Client();
+
+        try {
+            // Construct the URL for retrieving details of a specific provider
+            $url = 'https://anypoint.mulesoft.com/mocking/api/v1/sources/exchange/assets/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/1.0.49/m/providers/' . $providerId;
+
+            // Send GET request to the URL
+            $response = $client->get($url, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            // Check if the request was successful (status code 200)
+            if ($response->getStatusCode() == 200) {
+                // Decode the JSON response into an associative array
+                $data = json_decode($response->getBody(), true);
+
+                // Check if "region" attribute exists and get its value
+                if (isset($data['region'])) {
+                    $region = $data['region'];
+                    // Return the region as JSON response
+                    return response()->json(['region' => $region]);
+                } else {
+                    // Handle the case where "region" attribute is not found in the JSON response
+                    return response()->json(['error' => 'Region not found in the JSON response'], 500);
+                }
+            } else {
+                // Handle non-200 status code responses
+                return response()->json(['error' => 'Failed to retrieve provider details'], $response->getStatusCode());
+            }
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the request
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getUsers($providerId)
+    {
+        // Initialize Guzzle client
+        $client = new Client();
+
+        try {
+            // Construct the URL for retrieving user data associated with a specific provider
+            $url = 'https://anypoint.mulesoft.com/mocking/api/v1/sources/exchange/assets/4d36bd23-127d-4acf-8903-ba292ea615d4/cqc-syndication-1/1.0.49/m/providers/' . $providerId;
+
+            // Send GET request to the URL
+            $response = $client->get($url, [
+                'headers' => [
+                    'Accept' => 'application/json',
+                ],
+            ]);
+
+            // Check if the request was successful (status code 200)
+            if ($response->getStatusCode() == 200) {
+                // Decode the JSON response into an associative array
+                $data = json_decode($response->getBody(), true);
+
+                // Check if "contacts" attribute exists and return it
+                if (isset($data['contacts'])) {
+                    $contacts = $data['contacts'];
+                    // Return the contacts as JSON response
+                    return response()->json(['contacts' => $contacts]);
+                } else {
+                    // Handle the case where "contacts" attribute is not found in the JSON response
+                    return response()->json(['error' => 'Contacts not found in the JSON response'], 500);
+                }
+            } else {
+                // Handle non-200 status code responses
+                return response()->json(['error' => 'Failed to retrieve provider details'], $response->getStatusCode());
+            }
+        } catch (\Exception $e) {
+            // Handle any exceptions that occur during the request
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 }
